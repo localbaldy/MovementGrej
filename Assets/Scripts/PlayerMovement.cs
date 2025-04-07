@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
@@ -7,6 +8,14 @@ public class PlayerMovement : MonoBehaviour
     public float MoveSpeed;
     public float walkSpeed;
     public float runSpeed;
+    public float slideSpeed;
+
+    private float desireMoveSpeed;
+    private float LastDesiredMoveSpeed;
+    private float RunWalkSpeedDiff;
+
+    public float SpeedIncreaseMultiplier;
+    public float slopeIncreaseMultiplier;
 
     public float GroundDrag;
 
@@ -57,8 +66,11 @@ public class PlayerMovement : MonoBehaviour
         walking,
         sprinting,
         crouching,
+        sliding,
         air
     }
+
+    public bool sliding;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -67,6 +79,8 @@ public class PlayerMovement : MonoBehaviour
         rb.freezeRotation = true;
 
         startYScale = transform.localScale.y;
+
+        RunWalkSpeedDiff = runSpeed - walkSpeed;
     }
 
 
@@ -85,34 +99,89 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             rb.linearDamping = 0;
-            
+
         }
     }
 
     private void StateHandler()
     {
-        if (grounded && Input.GetKey(crouchKey))
+        if (sliding)
+        {
+            state = MovementState.sliding;
+
+            if (OnSlope() && rb.linearVelocity.y < 0.1f)
+            {
+                desireMoveSpeed = slideSpeed;
+            }
+
+            else
+            {
+                LastDesiredMoveSpeed = runSpeed;
+            }
+        }
+
+        else if (grounded && Input.GetKey(crouchKey))
         {
             state = MovementState.crouching;
-            MoveSpeed = crouchSpeed;
+            desireMoveSpeed = crouchSpeed;
         }
 
         else if (grounded && Input.GetKey(sprintKey))
         {
             state = MovementState.sprinting;
-            MoveSpeed = runSpeed;
+            desireMoveSpeed = runSpeed;
         }
 
         else if (grounded)
         {
             state = MovementState.walking;
-            MoveSpeed = walkSpeed;
+            desireMoveSpeed = walkSpeed;
         }
 
         else
         {
             state = MovementState.air;
         }
+
+        if (Mathf.Abs(desireMoveSpeed - LastDesiredMoveSpeed) > RunWalkSpeedDiff)
+        {
+            StopAllCoroutines();
+            StartCoroutine(SmoothlyLerpMoveSpeed());
+        }
+        else
+        {
+            MoveSpeed = desireMoveSpeed;
+        }
+
+        LastDesiredMoveSpeed = desireMoveSpeed;
+    }
+
+    private IEnumerator SmoothlyLerpMoveSpeed()
+    {
+        float time = 0;
+        float difference = Mathf.Abs(desireMoveSpeed - MoveSpeed);
+        float startValue = MoveSpeed;
+
+        while (time < difference)
+        {
+            MoveSpeed = Mathf.Lerp(startValue, desireMoveSpeed, time / difference);
+
+            if (OnSlope())
+            {
+                float slopeAngle = Vector3.Angle(Vector3.up, slopeHit.normal);
+                float slopeAngleIncrease = 1 + (slopeAngle / 90f);
+
+                time += Time.deltaTime * SpeedIncreaseMultiplier * slopeIncreaseMultiplier * slopeAngleIncrease;
+            }
+            else
+            {
+                time += Time.deltaTime * SpeedIncreaseMultiplier;
+            }
+
+            yield return null;
+        }
+
+        MoveSpeed = desireMoveSpeed;
     }
 
     void FixedUpdate()
@@ -162,7 +231,8 @@ public class PlayerMovement : MonoBehaviour
 
         if (OnSlope() && !exitingSlope)
         {
-            rb.AddForce(GetSlopeMoveDirection() * MoveSpeed * 20f, ForceMode.Force);
+            rb.AddForce(GetSlopeMoveDirection(moveDirection) * MoveSpeed * 20f, ForceMode.Force);
+            //rb.useGravity = false;
 
             if (rb.linearVelocity.y > 0)
             {
@@ -170,7 +240,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        if (grounded)
+        else if (grounded)
         {
             rb.AddForce(moveDirection.normalized * MoveSpeed * 10f, ForceMode.Force);
         }
@@ -178,6 +248,7 @@ public class PlayerMovement : MonoBehaviour
         else if (!grounded)
         {
             rb.AddForce(moveDirection.normalized * MoveSpeed * 10f * airMultiplier, ForceMode.Force);
+            //rb.useGravity = true;
         }
 
         rb.useGravity = !OnSlope();
@@ -185,7 +256,23 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        //§Gizmos.draw
+        if (rb == null) return;
+
+        
+        Vector3 velocityDirection = rb.linearVelocity;
+
+        
+        if (velocityDirection != Vector3.zero)
+        {
+            Vector3 spherePos = transform.position + velocityDirection.normalized * 1.5f;
+
+            Gizmos.color = Color.red;
+            Gizmos.DrawSphere(spherePos, 0.2f);
+
+            
+            Gizmos.color = Color.green;
+            Gizmos.DrawLine(transform.position, spherePos);
+        }
     }
 
     private void SpeedControl()
@@ -229,20 +316,20 @@ public class PlayerMovement : MonoBehaviour
         exitingSlope = false;
     }
 
-    private bool OnSlope()
+    public bool OnSlope()
     {
-        if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, PlayerHeight * 0.5f * 0.3f))
+        if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, PlayerHeight * 0.5f + 0.5f, whatIsGround))
         {
             float angle = Vector3.Angle(Vector3.up, slopeHit.normal);
             return angle < MaxSlopeAngle && angle != 0;
         }
 
-        Debug.Log("no raycast hit");
         return false;
     }
 
-    private Vector3 GetSlopeMoveDirection()
+
+    public Vector3 GetSlopeMoveDirection(Vector3 direction)
     {
-        return Vector3.ProjectOnPlane(moveDirection, slopeHit.normal).normalized;
+        return Vector3.ProjectOnPlane(direction, slopeHit.normal).normalized;
     }
 }

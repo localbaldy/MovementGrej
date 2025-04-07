@@ -222,7 +222,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0.5, y: 0, z: 0, w: 0.8660254}
   m_LocalPosition: {x: 20, y: 3.157949, z: 10.74}
-  m_LocalScale: {x: 7.304708, y: 14.395777, z: 0.68388563}
+  m_LocalScale: {x: 7.304708, y: 139.18124, z: 0.68388563}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -1257,7 +1257,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0.42261827, y: 0, z: 0, w: 0.9063079}
   m_LocalPosition: {x: 29, y: 3.157949, z: 10.74}
-  m_LocalScale: {x: 7.304708, y: 14.395777, z: 0.68388563}
+  m_LocalScale: {x: 7.304708, y: 139.18124, z: 0.68388563}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -1381,6 +1381,7 @@ GameObject:
   - component: {fileID: 1107385487}
   - component: {fileID: 1107385486}
   - component: {fileID: 1107385488}
+  - component: {fileID: 1107385489}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1448,7 +1449,10 @@ MonoBehaviour:
   MoveSpeed: 7
   walkSpeed: 5
   runSpeed: 10
-  GroundDrag: 5
+  slideSpeed: 30
+  SpeedIncreaseMultiplier: 1.5
+  slopeIncreaseMultiplier: 2.5
+  GroundDrag: 4
   JumpForce: 20
   jumpCooldown: 0.25
   airMultiplier: 1
@@ -1466,6 +1470,25 @@ MonoBehaviour:
   MaxSlopeAngle: 40
   Orientation: {fileID: 417222773}
   state: 0
+  sliding: 0
+--- !u!114 &1107385489
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1107385485}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03115c7aedb0fda42b6d17390fa78f34, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  orientation: {fileID: 417222773}
+  playerObj: {fileID: 1107385487}
+  maxSlideTime: 0.75
+  slideForce: 1000
+  slideYScale: 0.5
+  slideKey: 306
 --- !u!1 &1197130970
 GameObject:
   m_ObjectHideFlags: 0
@@ -1721,13 +1744,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1936731153}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.3420201, y: 0, z: 0, w: 0.9396927}
+  m_LocalRotation: {x: 0.33380687, y: 0, z: 0, w: 0.94264156}
   m_LocalPosition: {x: 38, y: 3.157949, z: 10.74}
-  m_LocalScale: {x: 7.304708, y: 14.395777, z: 0.68388563}
+  m_LocalScale: {x: 7.304708, y: 130.25299, z: 0.68388563}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 40, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 39, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
