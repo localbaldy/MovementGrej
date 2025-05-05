@@ -12,7 +12,7 @@ public class PlayerMovement : MonoBehaviour
 
     private float desireMoveSpeed;
     private float LastDesiredMoveSpeed;
-    private float RunWalkSpeedDiff;
+    private float RunCrouchSpeedDiff;
 
     public float SpeedIncreaseMultiplier;
     public float slopeIncreaseMultiplier;
@@ -37,6 +37,7 @@ public class PlayerMovement : MonoBehaviour
     public float crouchSpeed;
     public float crouchYScale;
     private float startYScale;
+    bool crouching;
 
     [Header("Keybinds")]
     public KeyCode jumpKey = KeyCode.Space;
@@ -80,7 +81,7 @@ public class PlayerMovement : MonoBehaviour
 
         startYScale = transform.localScale.y;
 
-        RunWalkSpeedDiff = runSpeed - walkSpeed;
+        RunCrouchSpeedDiff = runSpeed - crouchSpeed;
     }
 
 
@@ -143,7 +144,7 @@ public class PlayerMovement : MonoBehaviour
             state = MovementState.air;
         }
 
-        if (Mathf.Abs(desireMoveSpeed - LastDesiredMoveSpeed) > RunWalkSpeedDiff)
+        if (Mathf.Abs(desireMoveSpeed - LastDesiredMoveSpeed) > RunCrouchSpeedDiff )
         {
             StopAllCoroutines();
             StartCoroutine(SmoothlyLerpMoveSpeed());
@@ -162,12 +163,21 @@ public class PlayerMovement : MonoBehaviour
         float difference = Mathf.Abs(desireMoveSpeed - MoveSpeed);
         float startValue = MoveSpeed;
 
-        while (time < difference)
+        while (time < difference && state != MovementState.crouching)
         {
+
+           
             MoveSpeed = Mathf.Lerp(startValue, desireMoveSpeed, time / difference);
+            
+            
+
+
+
 
             if (OnSlope())
             {
+                
+
                 float slopeAngle = Vector3.Angle(Vector3.up, slopeHit.normal);
                 float slopeAngleIncrease = 1 + (slopeAngle / 90f);
 
@@ -214,6 +224,7 @@ public class PlayerMovement : MonoBehaviour
         {
             transform.localScale = new Vector3(transform.localScale.x, crouchYScale, transform.localScale.z);
             rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
+            crouching = true;
         }
 
         //stop crouch
@@ -221,6 +232,7 @@ public class PlayerMovement : MonoBehaviour
         {
             transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
             rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
+            crouching = false;
         }
     }
 
