@@ -9,6 +9,7 @@ public class PlayerMovement : MonoBehaviour
     public float walkSpeed;
     public float runSpeed;
     public float slideSpeed;
+    public float WallRunSpeed;
 
     private float desireMoveSpeed;
     private float LastDesiredMoveSpeed;
@@ -37,7 +38,7 @@ public class PlayerMovement : MonoBehaviour
     public float crouchSpeed;
     public float crouchYScale;
     private float startYScale;
-    bool crouching;
+    
 
     [Header("Keybinds")]
     public KeyCode jumpKey = KeyCode.Space;
@@ -68,9 +69,12 @@ public class PlayerMovement : MonoBehaviour
         sprinting,
         crouching,
         sliding,
+        wallrunning,
         air
     }
 
+    public bool wallrunning;
+    public bool crouching;
     public bool sliding;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -106,6 +110,12 @@ public class PlayerMovement : MonoBehaviour
 
     private void StateHandler()
     {
+        if (wallrunning)
+        {
+            state = MovementState.wallrunning;
+            desireMoveSpeed = WallRunSpeed;
+        }
+
         if (sliding)
         {
             state = MovementState.sliding;
